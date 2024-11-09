@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -19,7 +20,13 @@ public class WeatherAPIData extends JPanel implements ActionListener{
 
     private JTextField inputField;
     private JButton confirmButton;
-    private JLabel weatherLabel;
+
+    private JLabel cityBanner;
+    private JLabel emojiLabel;
+    private JLabel dataLabel;
+    private JLabel tempLabel;
+    private JPanel dataPanel;
+    
 
     private double temperature;
     private double humidity;
@@ -30,35 +37,73 @@ public class WeatherAPIData extends JPanel implements ActionListener{
     String cityInput;
 
     public WeatherAPIData() {
+        
         addGUI();
     }
 
     
     public void addGUI() {
-        
+        //base panel
         basePanel = new JPanel();
         basePanel.setPreferredSize(new Dimension(400, 600));
         basePanel.setBackground(Color.PINK);
         basePanel.setLayout(new BoxLayout(basePanel, BoxLayout.Y_AXIS));
 
+        //weather panel (top panel)
+        Color darkBlue = new Color(32, 33, 36);
+        Color lightBlue = new Color(218, 239, 255);
         weatherPanel = new JPanel();
         weatherPanel.setPreferredSize(new Dimension(400, 400));
-        weatherPanel.setBackground(Color.LIGHT_GRAY);
+        weatherPanel.setBackground(darkBlue);
+        weatherPanel.setLayout(new BoxLayout(weatherPanel, BoxLayout.Y_AXIS));
 
-        weatherLabel = new JLabel();
-        weatherPanel.add(weatherLabel);
-        
+        //stuff inside weather panel
+        cityBanner = new JLabel("City");
+        cityBanner.setPreferredSize(new Dimension(400, 50));
+        cityBanner.setFont(new Font("SansSerif", Font.BOLD, 30));
+        cityBanner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        cityBanner.setForeground(lightBlue);
+
+        tempLabel = new JLabel("30F");
+        tempLabel.setPreferredSize(new Dimension(400, 50));
+        tempLabel.setFont(new Font("NotoColorEmoji-Regular", Font.PLAIN, 30));
+        tempLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        tempLabel.setForeground(lightBlue);
+
+        emojiLabel = new JLabel("HI");
+        emojiLabel.setPreferredSize(new Dimension(400, 150));
+        emojiLabel.setFont(new Font("SansSerif", Font.PLAIN, 150));
+        emojiLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        emojiLabel.setForeground(lightBlue);
+
+        dataLabel = new JLabel("Temperature:");
+        dataLabel.setPreferredSize(new Dimension(400, 150));
+        dataLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+        dataLabel.setForeground(lightBlue);
+
+        dataPanel = new JPanel();
+        dataPanel.setPreferredSize(new Dimension(400, 150));
+        dataPanel.setBackground(darkBlue);
+
+        dataPanel.add(dataLabel);
+        weatherPanel.add(cityBanner);
+        weatherPanel.add(tempLabel);
+        weatherPanel.add(emojiLabel);
+        weatherPanel.add(dataPanel);
+ 
+        //bottom panel
         inputPanel = new JPanel();
         inputPanel.setPreferredSize(new Dimension(400, 200));
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
-
+        //city input field
         inputField = new JTextField();
-        
+        //city confirm button
         confirmButton = new JButton("Search");
         confirmButton.setPreferredSize(new Dimension(400, 50));
         confirmButton.addActionListener(this);
 
+        //manage bottom panel
         JLabel inputBanner = new JLabel("Enter a city:");
         inputBanner.setPreferredSize(new Dimension(400, 50));
         inputPanel.add(inputBanner);
@@ -66,13 +111,11 @@ public class WeatherAPIData extends JPanel implements ActionListener{
         inputPanel.add(Box.createVerticalStrut(70));
         inputPanel.add(confirmButton);
 
+        //add to basepanel
         basePanel.add(weatherPanel);
         basePanel.add(inputPanel);
 
         add(basePanel);
-
-        
-
     }
 
     private String fetchApiResponse(String authority, String path, String query) {
@@ -138,24 +181,67 @@ public class WeatherAPIData extends JPanel implements ActionListener{
     }
 
     public void updateWeatherPanel() {
-        weatherLabel.setText("Temperature: " + temperature + "Humidity: " + humidity + "Precipitation: " + precipitation + "Wind Speed: " + windSpeed);
-        System.out.println(weatherCode);
+        //weatherLabel.setText("Temperature: " + temperature + "Humidity: " + humidity + "Precipitation: " + precipitation + "Wind Speed: " + windSpeed);
+        updateEmoji(weatherCode);
+        dataLabel.setText("<html> Temperature: " + temperature + "°F<br><br>Humidity: " + humidity + "%<br><br>Precipitation: " + precipitation + " in<br><br>Wind Speed: " + windSpeed + " mph<br><br></html>");
+        tempLabel.setText(temperature + "°F");
+        cityBanner.setText(cityInput.substring(0, 1).toUpperCase() + cityInput.substring(1).toLowerCase());
         this.repaint();
         this.revalidate();
+    }
+
+    public void updateEmoji(long weather_code) {
+        String emoji = " ";
+        switch ((int) weather_code) {
+            case 0: 
+                emoji = "☀";
+                break;
+            case 1, 2, 3:
+                emoji = "⛅";
+                break;
+            case 45, 48:
+                emoji = "🌫️";
+                break;
+            case 51, 53, 55:
+                emoji = "🌦️";
+                break;
+            case 56, 57, 61, 63, 65, 66, 67, 80, 81, 82:
+                emoji = "🌧️";
+                break;
+            case 71, 73, 75, 77, 85, 86:
+                emoji = "🌨️";
+                break;
+            case 95, 96, 99:
+                emoji = "⛈️";
+                break;
+            default:
+                emoji = " ";
+        }
+        emojiLabel.setText(emoji);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == confirmButton) {
             cityInput = inputField.getText();
-            
-            double longitude = (double) getLocationData(cityInput).get("longitude");
-            double latitude = (double) getLocationData(cityInput).get("latitude");
-            getWeatherData(longitude, latitude);
-            updateWeatherPanel();
+            double longitude = 0;
+            double latitude = 0;
+            if (getLocationData(cityInput) != null) {
+                longitude = (double) getLocationData(cityInput).get("longitude");
+                latitude = (double) getLocationData(cityInput).get("latitude");
+
+                getWeatherData(longitude, latitude);
+                updateWeatherPanel();
+            }
+            else {
+                JOptionPane.showMessageDialog(this, "Please enter a valid city");
+            }
             
         }
     }
+
+
+    
 
 
 //https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch
