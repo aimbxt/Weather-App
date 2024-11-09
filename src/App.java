@@ -11,6 +11,8 @@ public class App {
         WeatherAPIData weatherAPIData = new WeatherAPIData();
         frame.add(weatherAPIData);
         frame.pack();
+
+        weatherAPIData.initialize();
         frame.setVisible(true);
     }
 }
