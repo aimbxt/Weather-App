@@ -95,7 +95,7 @@ public class WeatherAPIData extends JPanel implements ActionListener, KeyListene
         emojiLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         emojiLabel.setForeground(lightBlue);
 
-        dataLabel = new JLabel("");
+        dataLabel = new JLabel("<html>Temperature: 80°F<br><br>Humidity: 65%<br><br>Precipitation: 0 in<br><br>Wind Speed: 2 mph<br><br></html>");
         dataLabel.setMaximumSize(new Dimension(400, 200));
         dataLabel.setMinimumSize(new Dimension(400, 200));
         dataLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
