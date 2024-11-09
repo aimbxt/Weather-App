@@ -211,7 +211,7 @@ public class WeatherAPIData extends JPanel implements ActionListener{
                 emoji = "🌨️";
                 break;
             case 95, 96, 99:
-                emoji = "⛈️";
+                emoji = "⛈";
                 break;
             default:
                 emoji = " ";
